@@ -1,10 +1,10 @@
-# ECOSTRESS Moisture Thresholds
+\# ECOSTRESS Moisture Sensitivity
 
 This Repository includes codes for the manuscript "Increasing limitation of compound soil and atmospheric moisture stresses on evapotranspiration"
 
 
 
-\# Data
+\## Data
 
 All datasets used in this project are publicly available.
 
