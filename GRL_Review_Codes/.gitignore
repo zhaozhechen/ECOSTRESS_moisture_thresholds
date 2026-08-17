@@ -1,0 +1,16 @@
+# Large or reproducible data files
+00_Data/Raw/*
+!00_Data/Raw/README.md
+00_Data/Processed/*
+!00_Data/Processed/README.md
+
+# Generated reviewer-analysis outputs
+02_Results/Figures/*
+!02_Results/Figures/README.md
+02_Results/Tables/*
+!02_Results/Tables/README.md
+
+# R session files
+.Rhistory
+.RData
+.Ruserdata
