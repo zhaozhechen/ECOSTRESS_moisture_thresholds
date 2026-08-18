@@ -7,6 +7,8 @@
 # Generated reviewer-analysis outputs
 02_Results/Figures/*
 !02_Results/Figures/README.md
+!02_Results/Figures/Clear_Sky_comparison.pdf
+!02_Results/Figures/Clear_Sky_comparison.png
 02_Results/Tables/*
 !02_Results/Tables/README.md
 

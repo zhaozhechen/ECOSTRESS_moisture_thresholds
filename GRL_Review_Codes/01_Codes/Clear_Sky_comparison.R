@@ -11,45 +11,22 @@ library(dplyr)
 library(ggplot2)
 library(RColorBrewer)
 library(cowplot)
-library(scales)
 
 # Path to raw AMF dataset
-AMF_path <- "/fs/ess/PAS2204/SharedData/AmeriFlux_All_Sites/"
+AMF_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/00_Data/Raw/AmeriFlux_All_Sites/"
 # Path to full-range df of AMF and RS
-Full_df_path <- "/fs/ess/PAS2204/Results/Validation_ET_ESI_All_AMF/Full_range_df/"
+Full_df_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/00_Data/Processed/Full_range_df/"
+# Path to output figures
+Output_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/02_Results/Figures"
 
 # Source plotting functions
-source("/fs/ess/PAS2204/Code/GRL_Review_Codes/Plotting_functions.R")
+source("D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/01_Codes/Plotting_functions.R")
+source("D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/01_Codes/General_functions.R")
+
 # Sites to test
 Site_ID_ls <- c("US-A32","US-CF3")
 
 my_color <- brewer.pal(6,"Set2")
-############
-# Functions
-############
-
-Daily_mean <- function(data){
-  DM <- matrix(data=data,nrow=window_size)
-  DM <- colMeans(DM,na.rm=T)
-  return(DM)
-}
-
-# Get required variable after QC
-# Input is the variable name
-Var_QC <- function(variable){
-  varlist <- colnames(AMF)
-  # Variable name in the dataset
-  var <- varlist[grepl(variable,varlist)&!grepl("QC",varlist)]
-  var <- AMF[var][,1]
-  # QC for this variable
-  var_QC <- varlist[grepl(variable,varlist)&grepl("QC",varlist)]
-  if(length(var_QC!=0)){
-    # Apply QC, only keep QC = 0
-    var_QC <- AMF[var_QC][,1]
-    var[var_QC!=0] <- NA
-  }
-  return(var)
-}
 
 # ------ Main -------
 # Initialize a list to store figures
@@ -94,6 +71,8 @@ for(arrayid in 1:length(Site_ID_ls)){
   
   # Netrad
   netrad <- Var_QC("NETRAD")
+  # Change missing values to NA
+  netrad[netrad==-9999] <- NA
   # netrad < 0 equals 0
   netrad[netrad<0] <- 0
   
@@ -116,58 +95,63 @@ for(arrayid in 1:length(Site_ID_ls)){
     # Remove rows with ESI_daily as NA
     filter(!is.na(ESI_daily))
   
-  # Calculate ESI following the same normalization used
-  # in the threshold extraction
-  ESI_rescaled <- rescale(AMF_df$ESI_daily) * 100
-  AMF_df$ESI_Z <- ESI_rescaled - median(ESI_rescaled, na.rm = TRUE)
-  
-  # Get 20th and 80th percentile thresholds
-  NETRAD_q20 <- quantile(AMF_df$NETRAD_daily, 0.2, na.rm = TRUE)
-  NETRAD_q80 <- quantile(AMF_df$NETRAD_daily, 0.8, na.rm = TRUE)
-  
-  # Assign low/high net radiation groups
+  # Get 25th and 75th percentile thresholds for each month
+  # Assign low/high net radiation groups based on monthly thresholds
   AMF_df <- AMF_df %>%
+    mutate(month = format(as.Date(time), "%m"),
+           year_month = format(as.Date(time), "%Y-%m")) %>%
+    group_by(month) %>%
     mutate(
+      NETRAD_q25 = quantile(NETRAD_daily, 0.25, na.rm = TRUE),
+      NETRAD_q75 = quantile(NETRAD_daily, 0.75, na.rm = TRUE),
       NETRAD_group = case_when(
-        NETRAD_daily <= NETRAD_q20 ~ "Low",
-        NETRAD_daily >= NETRAD_q80 ~ "High",
+        NETRAD_daily <= NETRAD_q25 ~ "Low",
+        NETRAD_daily >= NETRAD_q75 ~ "High",
         TRUE ~ NA_character_
       )
-    )
+    ) %>%
+    ungroup()
   
   # Keep only low and high groups
   AMF_compare <- AMF_df %>%
     filter(!is.na(NETRAD_group),
-           !is.na(ESI_Z))
+           !is.na(ESI_daily))
+  AMF_compare$NETRAD_group <- factor(AMF_compare$NETRAD_group,
+                                     levels=c("Low","High"))
   
-  # Summary statistics
-  ESI_summary <- AMF_compare %>%
-    group_by(NETRAD_group) %>%
+  # Calculate monthly mean ESI for each net radiation group
+  ESI_monthly_low <- AMF_compare %>%
+    filter(NETRAD_group=="Low") %>%
+    group_by(year_month) %>%
     summarise(
-      n = n(),
-      mean_ESI = mean(ESI_Z, na.rm = TRUE),
-      median_ESI = median(ESI_Z, na.rm = TRUE),
-      sd_ESI = sd(ESI_Z, na.rm = TRUE),
+      ESI_low = mean(ESI_daily, na.rm = TRUE),
       .groups = "drop"
     )
+  ESI_monthly_high <- AMF_compare %>%
+    filter(NETRAD_group=="High") %>%
+    group_by(year_month) %>%
+    summarise(
+      ESI_high = mean(ESI_daily, na.rm = TRUE),
+      .groups = "drop"
+    )
+  ESI_monthly <- merge(ESI_monthly_low,ESI_monthly_high,by="year_month")
   
-  # Compare ESI between low and high net radiation groups
-  t_test_result <- t.test(
-    ESI_Z ~ NETRAD_group,
-    data = AMF_compare
-  )
+  # Compare monthly mean ESI between low and high net radiation groups
+  t_test_result <- t.test(ESI_monthly$ESI_high,
+                          ESI_monthly$ESI_low,
+                          paired=TRUE)
   
   p_value <- t_test_result$p.value
   
   # Make boxplots of daily ESI between the two net radiation groups
-  g <- ggplot(data=AMF_compare,aes(x=NETRAD_group,y=ESI_Z,fill=NETRAD_group))+
+  g <- ggplot(data=AMF_compare,aes(x=NETRAD_group,y=ESI_daily,fill=NETRAD_group))+
     geom_boxplot(outlier.size=0.2)+
     scale_fill_manual(values = c("High" = my_color[2],
                                  "Low" = my_color[3]))+
     my_theme+
     annotate("text",
              x=Inf, y=Inf,
-             label=paste0("p = ", format.pval(p_value, digits=2, eps=0.001)),
+             label=paste0("p = ",format.pval(p_value, digits=2, eps=0.001)),
              hjust=1.1, vjust=1.5)+
     labs(x = "Net radiation group",y="Daily ESI")+
     ggtitle(Site_ID)
@@ -179,7 +163,6 @@ for(arrayid in 1:length(Site_ID_ls)){
 
 # Combine the two plots
 g_all <- plot_grid(plotlist = g_ls,nrow=1,labels = "auto")
-
-
+print_g(g_all,"Clear_Sky_comparison",8,4)
 
 
