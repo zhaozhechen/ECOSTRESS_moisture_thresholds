@@ -100,7 +100,7 @@ for(arrayid in 1:length(Site_ID_ls)){
   AMF_df <- AMF_df %>%
     mutate(month = format(as.Date(time), "%m"),
            year_month = format(as.Date(time), "%Y-%m")) %>%
-    group_by(month) %>%
+    group_by(year_month) %>%
     mutate(
       NETRAD_q25 = quantile(NETRAD_daily, 0.25, na.rm = TRUE),
       NETRAD_q75 = quantile(NETRAD_daily, 0.75, na.rm = TRUE),
