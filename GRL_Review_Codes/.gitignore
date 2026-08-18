@@ -9,8 +9,13 @@
 !02_Results/Figures/README.md
 !02_Results/Figures/Clear_Sky_comparison.pdf
 !02_Results/Figures/Clear_Sky_comparison.png
+!02_Results/Figures/Future_outside_historical_range.pdf
+!02_Results/Figures/Future_outside_historical_range.png
 02_Results/Tables/*
 !02_Results/Tables/README.md
+!02_Results/Tables/Future_outside_historical_range_by_model.csv
+!02_Results/Tables/Future_outside_historical_range_summary.csv
+02_Results/Future_outside_historical_range/*
 
 # R session files
 .Rhistory

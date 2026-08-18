@@ -23,13 +23,15 @@ CMIP6_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/G
 Raster_stack_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/00_Data/Processed/Future_range/Reference/Combined_0.25D_Intercepts.rds"
 # Output path
 Output_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/02_Results/Future_outside_historical_range/"
+# Output path for summary tables
+Table_path <- "D:/Research/ECOSTRESS/Github repo/ECOSTRESS_moisture_thresholds/GRL_Review_Codes/02_Results/Tables/"
 
 # List of 15 models
 models_ls <- c("CMCC-ESM2","CanESM5","CanESM5-1","EC-Earth3","INM-CM4-8",
                "INM-CM5-0","IPSL-CM6A-LR","KACE-1-0-G","MIROC6","MPI-ESM1-2-HR",
                "MPI-ESM1-2-LR","MRI-ESM2-0","NorESM2-LM","NorESM2-MM","TaiESM1")
 
-time_name_ls <- c("Mid","End")
+time_name_ls <- c("End")
 ssp_ls <- c("ssp245","ssp585")
 
 # Metrics to calculate
@@ -122,6 +124,7 @@ Cal_outside_range <- function(CMIP_file,Historical_range,analysis_mask){
   SM_valid <- !is.na(SM)
   Joint_valid <- VPD_valid & SM_valid
   
+  # Get the number of days that VPD or SM fall beyond historical range across the 5 years
   VPD_below <- VPD < Historical_range$VPD_min
   VPD_above <- VPD > Historical_range$VPD_max
   VPD_outside <- VPD_below | VPD_above
@@ -157,6 +160,7 @@ Weighted_mean <- function(r,area_raster){
 #######
 dir.create(Output_path,recursive=TRUE,showWarnings=FALSE)
 dir.create(paste0(Output_path,"Model_results/"),recursive=TRUE,showWarnings=FALSE)
+dir.create(Table_path,recursive=TRUE,showWarnings=FALSE)
 
 # Check required inputs
 Check_inputs()
@@ -220,7 +224,7 @@ for(time_name in time_name_ls){
 
 # Output statistics for all models
 statistics_all <- do.call(rbind,statistics_ls)
-write.csv(statistics_all,paste0(Output_path,"Outside_historical_range_by_model.csv"),
+write.csv(statistics_all,paste0(Table_path,"Future_outside_historical_range_by_model.csv"),
           row.names=FALSE)
 
 # Summarize statistics across 15 models
@@ -232,7 +236,7 @@ statistics_sd <- aggregate(Mean_fraction~Time+SSP+Metric,
 names(statistics_sd)[names(statistics_sd)=="Mean_fraction"] <- "SD_mean_fraction"
 statistics_summary <- merge(statistics_mean,statistics_sd,
                             by=c("Time","SSP","Metric"))
-write.csv(statistics_summary,paste0(Output_path,"Outside_historical_range_summary.csv"),
+write.csv(statistics_summary,paste0(Table_path,"Future_outside_historical_range_summary.csv"),
           row.names=FALSE)
 
 print("All done !!!")
