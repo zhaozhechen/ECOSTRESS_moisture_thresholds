@@ -13,10 +13,13 @@
 !02_Results/Figures/Future_outside_historical_range.png
 !02_Results/Figures/VPD_ET_PET_ESI.pdf
 !02_Results/Figures/VPD_ET_PET_ESI.png
+!02_Results/Figures/Meshgrid_size_comparison.pdf
+!02_Results/Figures/Meshgrid_size_comparison.png
 02_Results/Tables/*
 !02_Results/Tables/README.md
 !02_Results/Tables/Future_outside_historical_range_by_model.csv
 !02_Results/Tables/Future_outside_historical_range_summary.csv
+!02_Results/Tables/Meshgrid_size_comparison.csv
 02_Results/Future_outside_historical_range/*
 
 # R session files
