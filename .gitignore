@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Local RF input used for reviewer-response SHAP analysis
+/GRL_Review_Codes/00_Data/Processed/RF_SHAP/
+/GRL_Review_Codes/02_Results/Intermediate/

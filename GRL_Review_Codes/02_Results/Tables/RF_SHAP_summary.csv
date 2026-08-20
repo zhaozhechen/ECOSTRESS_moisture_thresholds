@@ -1,0 +1,2 @@
+"Seed","Complete_observations","Training_observations","Testing_observations","SHAP_evaluation_observations","SHAP_permutations","R2_train","R2_test","Rank_correlation"
+1,13315,9320,3995,2000,10,0.676844082417912,0.688147232022201,-0.285714285714286
