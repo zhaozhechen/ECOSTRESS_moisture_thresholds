@@ -131,25 +131,28 @@ names(summary_df)[names(summary_df)=="theta"] <- "Alpha_degrees"
 names(summary_df)[names(summary_df)=="theta_sd"] <- "Alpha_sd_degrees"
 summary_df <- summary_df %>% group_by(Site_ID) %>%
   mutate(Alpha_change_degrees=Alpha_degrees-Alpha_degrees[Dataset=="All"],
-         Retained_percent=100*N_complete/N_complete[Dataset=="All"]) %>% ungroup()
+         Retained_percent=100*N_complete/N_complete[Dataset=="All"],
+         Alpha_lower_1SD=Alpha_degrees-Alpha_sd_degrees,
+         Alpha_upper_1SD=Alpha_degrees+Alpha_sd_degrees) %>% ungroup()
 write.csv(summary_df,file.path(Table_path,"AMF_alpha_netradiation_summary.csv"),row.names=FALSE)
 write.csv(bind_rows(cutoff_ls),file.path(Table_path,"AMF_alpha_netradiation_monthly_cutoffs.csv"),row.names=FALSE)
 write.csv(bind_rows(provenance_ls),file.path(Audit_path,"input_provenance.csv"),row.names=FALSE)
 capture.output(sessionInfo(),file=file.path(Audit_path,"sessionInfo.txt"))
 
 # Direct comparison of alpha, using the previous radiation-plot colors.
+source(file.path(Review_path,"01_Codes/Plotting_functions.R"))
 summary_df$Dataset <- factor(summary_df$Dataset,levels=c("All","NETRAD_ge_Q25"))
+y_range <- c(0,100)
 g_ls <- lapply(Site_ls,function(site){
   df <- filter(summary_df,Site_ID==site)
   ggplot(df,aes(Dataset,Alpha_degrees,fill=Dataset))+
     geom_col(width=0.6,color="black")+
-    geom_text(aes(label=sprintf("%.1f",Alpha_degrees)),vjust=-0.5,size=4.5)+
+    geom_text(aes(label=sprintf("%.1f",Alpha_degrees)),vjust=-0.5,size=16/ggplot2::.pt)+
     scale_fill_manual(values=c("All"="#8DA0CB","NETRAD_ge_Q25"="#FC8D62"))+
     scale_x_discrete(labels=c("All","Excluding low\nradiation"))+
-    scale_y_continuous(limits=c(0,100),breaks=seq(0,90,30),expand=expansion(mult=c(0,0)))+
+    scale_y_continuous(limits=y_range,expand=expansion(mult=c(0,0)))+
     labs(x=NULL,y=expression(alpha~(degree)),title=site)+
-    theme_classic(base_size=14)+theme(panel.border=element_rect(color="black",fill=NA),
-                                    legend.position="none",plot.title=element_text(hjust=0))
+    my_theme+theme(plot.title=element_text(hjust=0))
 })
 g <- plot_grid(plotlist=g_ls,nrow=1,labels=c("a","b"))
 ggsave(file.path(Output_path,"AMF_alpha_netradiation.png"),g,width=8,height=4,dpi=600,bg="white")

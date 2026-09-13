@@ -19,6 +19,8 @@
 !02_Results/Figures/RF_SHAP_importance.png
 !02_Results/Figures/AMF_alpha_netradiation.png
 !02_Results/Figures/AMF_alpha_netradiation.pdf
+!02_Results/Figures/Clear_Sky_comparison_with_alpha.png
+!02_Results/Figures/Clear_Sky_comparison_with_alpha.pdf
 02_Results/Tables/*
 !02_Results/Tables/README.md
 !02_Results/Tables/Future_outside_historical_range_by_model.csv
